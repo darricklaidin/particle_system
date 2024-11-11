@@ -1,16 +1,18 @@
-package particlesystem
+package particles
 
 import (
 	"math"
+	"slices"
+	"strings"
 	"time"
 )
 
 type Particle struct {
-	lifetime int64
-	speed    float64
+	Lifetime int64
+	Speed    float64
 
-	x float64
-	y float64
+	X float64
+	Y float64
 }
 
 type ParticleParams struct {
@@ -19,8 +21,8 @@ type ParticleParams struct {
 
 	ParticleCount int
 
-	X int // max X
-	Y int // max Y
+	MaxRows    int
+	MaxColumns int
 
 	nextPosition NextPosition
 	ascii        Ascii
@@ -28,7 +30,7 @@ type ParticleParams struct {
 }
 
 type NextPosition func(particle *Particle, deltaMS int64)
-type Ascii func(row int, col int, counts [][]int) rune
+type Ascii func(row int, col int, counts [][]int) string
 type Reset func(particle *Particle, params *ParticleParams)
 
 type ParticleSystem struct {
@@ -39,9 +41,15 @@ type ParticleSystem struct {
 }
 
 func NewParticleSystem(params ParticleParams) ParticleSystem {
+	particles := make([]*Particle, 0)
+	for i := 0; i < params.ParticleCount; i++ {
+		particles = append(particles, &Particle{})
+	}
 	return ParticleSystem{
 		ParticleParams: params,
-		lastTime:       time.Now().UnixMilli(),
+		particles:      particles,
+
+		lastTime: time.Now().UnixMilli(),
 	}
 }
 
@@ -59,19 +67,19 @@ func (ps *ParticleSystem) Update() {
 	for _, p := range ps.particles {
 		ps.nextPosition(p, deltaMS)
 
-		if p.x >= float64(ps.X) || p.y >= float64(ps.Y) {
+		if p.X >= float64(ps.MaxRows) || p.Y >= float64(ps.MaxColumns) || p.Lifetime <= 0 {
 			ps.reset(p, &ps.ParticleParams)
 		}
 	}
 }
 
-func (ps *ParticleSystem) Display() [][]rune {
+func (ps *ParticleSystem) Display() string {
 	var counts [][]int = make([][]int, 0)
 
 	// Initializes the counts array
-	for row := 0; row < ps.Y; row++ {
+	for row := 0; row < ps.MaxColumns; row++ {
 		var count []int = make([]int, 0)
-		for col := 0; col < ps.X; col++ {
+		for col := 0; col < ps.MaxRows; col++ {
 			count = append(count, 0)
 		}
 		counts = append(counts, count)
@@ -79,20 +87,27 @@ func (ps *ParticleSystem) Display() [][]rune {
 
 	// Updates the counts array
 	for _, p := range ps.particles {
-		var row int = int(math.Floor(p.y))
-		var col int = int(math.Floor(p.x))
+		var row int = int(math.Floor(p.Y))
+		// Use math.Round here to include maxX
+		var col int = int(math.Round(p.X))
 		counts[row][col]++
 	}
 
 	// Update the grid with ASCII
-	out := make([][]rune, 0)
+	var out [][]string = make([][]string, 0)
 	for r, row := range counts {
-		outRow := make([]rune, 0)
+		var outRow []string = make([]string, 0)
 		for c := range row {
 			outRow = append(outRow, ps.ascii(r, c, counts))
 		}
 		out = append(out, outRow)
 	}
 
-	return out
+	slices.Reverse(out)
+	var outStr []string = make([]string, 0)
+	for _, row := range out {
+		outStr = append(outStr, strings.Join(row, ""))
+	}
+
+	return strings.Join(outStr, "\n")
 }
