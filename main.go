@@ -41,7 +41,7 @@ var c = `               .........:--===++++======================++++===--:.....
 `
 
 func main() {
-	coffee := particles.NewCoffee(61, 9, 6.0)
+	coffee := particles.NewCoffee(61, 8, 9.0)
 	coffee.Start()
 
 	timer := time.NewTicker(100 * time.Millisecond)
