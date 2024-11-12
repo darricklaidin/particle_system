@@ -109,5 +109,5 @@ func (ps *ParticleSystem) Display() string {
 		outStr = append(outStr, strings.Join(row, ""))
 	}
 
-	return strings.Join(outStr, "\n")
+	return outStr
 }
