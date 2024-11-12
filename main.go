@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"particle_system/particles"
 	"time"
 )
@@ -47,7 +49,12 @@ func main() {
 	timer := time.NewTicker(100 * time.Millisecond)
 	for {
 		<-timer.C
-		fmt.Print("\033[H\033[2J")
+
+		// fmt.Print("\033[H\033[2J")
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+
 		coffee.Update()
 		steam := coffee.Display()
 		for _, row := range steam {
