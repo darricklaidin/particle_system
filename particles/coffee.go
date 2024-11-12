@@ -3,27 +3,11 @@ package particles
 import (
 	"math"
 	"math/rand"
+	"time"
 )
 
 type Coffee struct {
 	ParticleSystem
-}
-
-func ascii(row int, col int, counts [][]int) string {
-	var count int = counts[row][col]
-	if count < 3 {
-		return " "
-	}
-	if count < 6 {
-		return "."
-	}
-	if count < 9 {
-		return ":"
-	}
-	if count < 12 {
-		return "{"
-	}
-	return "}"
 }
 
 func reset(particle *Particle, params *ParticleParams) {
@@ -31,8 +15,7 @@ func reset(particle *Particle, params *ParticleParams) {
 	particle.Speed = params.MaxSpeed * rand.Float64()
 
 	var maxX float64 = math.Floor(float64(params.MaxRows) / 2)
-	// FIXME: this is not normal distribution probability
-	particle.X = maxX + math.Max(-maxX, math.Min(rand.NormFloat64(), maxX))
+	particle.X = maxX + math.Max(-maxX, math.Min(rand.NormFloat64()*params.XStd, maxX))
 	particle.Y = 0
 }
 
@@ -46,15 +29,32 @@ func nextPosition(particle *Particle, deltaMS int64) {
 	particle.Y += particle.Speed * (float64(deltaMS) / 1000.0)
 }
 
-func NewCoffee(width int, height int) Coffee {
+func NewCoffee(width int, height int, scale float64) Coffee {
+	startTime := time.Now().UnixMilli()
+	ascii := func(row int, col int, counts [][]int) string {
+		var count int = counts[row][col]
+		if count < 2 {
+			return " "
+		}
+		// if count == 1 {
+		// 	return "."
+		// }
+		direction := row + int(((time.Now().UnixMilli()-startTime)/2000)%2)
+		if direction%2 == 0 {
+			return "}"
+		}
+		return "{"
+	}
+
 	return Coffee{
 		ParticleSystem: NewParticleSystem(
 			ParticleParams{
-				MaxLife:  7000,
-				MaxSpeed: 1,
+				MaxLife:  6000,
+				MaxSpeed: 1.5,
 
-				ParticleCount: 100,
+				ParticleCount: 700,
 
+				XStd:       scale,
 				MaxRows:    width,
 				MaxColumns: height,
 

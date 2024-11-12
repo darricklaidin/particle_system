@@ -21,6 +21,7 @@ type ParticleParams struct {
 
 	ParticleCount int
 
+	XStd       float64
 	MaxRows    int
 	MaxColumns int
 
@@ -73,7 +74,7 @@ func (ps *ParticleSystem) Update() {
 	}
 }
 
-func (ps *ParticleSystem) Display() string {
+func (ps *ParticleSystem) Display() []string {
 	var counts [][]int = make([][]int, 0)
 
 	// Initializes the counts array
